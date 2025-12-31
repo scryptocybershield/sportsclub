@@ -1,0 +1,10 @@
+# Sports club (synchronous version)
+
+django-cors-headers
+django-environ
+django-json-widget
+django-nanoid-field
+django-ninja
+django-ratelimit
+pydantic[email]
+psycopg[binary,pool]
