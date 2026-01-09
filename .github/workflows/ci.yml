@@ -8,16 +8,16 @@ on:
     branches: [main, develop]
 
 env:
-  # Django
-  SECRET_KEY: secret
-  DEBUG: "False"
-  ALLOWED_HOSTS: localhost,127.0.0.1
-  # Database
-  POSTGRES_USER: sportsclub
-  POSTGRES_PASSWORD: sportsclub
-  POSTGRES_DB: sportsclub
-  POSTGRES_HOST: localhost
-  POSTGRES_PORT: 5432
+  # Django - usando Secrets y Variables
+  SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+  DEBUG: ${{ vars.DEBUG || 'False' }}
+  ALLOWED_HOSTS: ${{ vars.ALLOWED_HOSTS || 'localhost,127.0.0.1' }}
+  # Database - usando Secrets y Variables
+  POSTGRES_USER: ${{ vars.POSTGRES_USER || 'sportsclub' }}
+  POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+  POSTGRES_DB: ${{ vars.POSTGRES_DB || 'sportsclub' }}
+  POSTGRES_HOST: ${{ vars.POSTGRES_HOST || 'localhost' }}
+  POSTGRES_PORT: ${{ vars.POSTGRES_PORT || '5432' }}
 
 jobs:
   lint:
@@ -52,13 +52,13 @@ jobs:
       postgres:
         image: postgres:18
         env:
-          POSTGRES_USER: sportsclub
-          POSTGRES_PASSWORD: sportsclub
-          POSTGRES_DB: sportsclub
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U sportsclub"
+          --health-cmd "pg_isready -U ${{ env.POSTGRES_USER }}"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -162,12 +162,14 @@ jobs:
       - name: Create .env file
         run: |
           cat <<EOF > .env
-          SECRET_KEY=secret
-          DEBUG=False
-          ALLOWED_HOSTS=localhost,127.0.0.1
-          POSTGRES_USER=sportsclub
-          POSTGRES_PASSWORD=sportsclub
-          POSTGRES_DB=sportsclub
+          SECRET_KEY=${{ env.SECRET_KEY }}
+          DEBUG=${{ env.DEBUG }}
+          ALLOWED_HOSTS=${{ env.ALLOWED_HOSTS }}
+          POSTGRES_USER=${{ env.POSTGRES_USER }}
+          POSTGRES_PASSWORD=${{ env.POSTGRES_PASSWORD }}
+          POSTGRES_DB=${{ env.POSTGRES_DB }}
+          POSTGRES_HOST=${{ env.POSTGRES_HOST }}
+          POSTGRES_PORT=${{ env.POSTGRES_PORT }}
           EOF
 
       - name: Build and start services
