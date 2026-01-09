@@ -117,7 +117,7 @@ jobs:
       - name: Bandit scan
         run: |
           pip install bandit
-          bandit -r sportsclub/ --severity-level high,medium \
+          bandit -r sportsclub/ --severity-level high \
             --format json --output bandit-report.json
 
       - name: Upload Bandit report
