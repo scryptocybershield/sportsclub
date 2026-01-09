@@ -9,7 +9,8 @@ on:
 
 env:
   # Django - usando Secrets y Variables
-  SECRET_KEY: 'insecure-ci-secret-key-for-testing-only'
+  # Para producción, configure DJANGO_SECRET_KEY en GitHub Secrets
+  SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY || 'insecure-ci-secret-key-for-testing-only' }}
   DEBUG: ${{ vars.DEBUG || 'False' }}
   ALLOWED_HOSTS: ${{ vars.ALLOWED_HOSTS || 'localhost,127.0.0.1' }}
   # Database - usando Secrets y Variables
@@ -85,11 +86,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Debug environment variables
-        run: |
-          echo "SECRET_KEY=$SECRET_KEY"
-          echo "DEBUG=$DEBUG"
-          echo "ALLOWED_HOSTS=$ALLOWED_HOSTS"
 
       - name: Run migrations
         working-directory: ./sportsclub
