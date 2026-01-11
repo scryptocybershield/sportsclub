@@ -42,8 +42,8 @@ class Command(BaseCommand):
 
         try:
             user = user_model.objects.get(username=options["username"])
-        except user_model.DoesNotExist:
-            raise CommandError(f"User '{options['username']}' does not exist") from None
+        except user_model.DoesNotExist as err:
+            raise CommandError(f"User '{options['username']}' does not exist") from err
 
         # Parse expiration date if provided
         expires_at = None
