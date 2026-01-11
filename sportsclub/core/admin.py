@@ -1,7 +1,7 @@
 # core/admin.py
 from django.contrib import admin
 
-from .models import Address
+from .models import Address, ApiKey
 
 
 @admin.register(Address)
@@ -72,3 +72,39 @@ class AddressAdmin(admin.ModelAdmin):
         return str(obj)
 
     formatted_address.short_description = "Formatted display"
+
+
+@admin.register(ApiKey)
+class ApiKeyAdmin(admin.ModelAdmin):
+    """Admin interface for ApiKey model."""
+
+    list_display = ["public_id", "key", "user", "name", "is_active", "is_expired", "last_used_at"]
+    list_display_links = ["public_id", "key"]
+    list_filter = ["is_active", "expires_at"]
+    search_fields = ["public_id", "key", "name", "user__username"]
+    readonly_fields = ["public_id", "key", "created_at", "updated_at", "deleted_at", "last_used_at"]
+    list_per_page = 50
+    ordering = ["-created_at"]
+
+    fieldsets = (
+        ("API Key Information", {
+            "fields": ("name", "user", "is_active", "expires_at"),
+            "description": "Basic API key configuration"
+        }),
+        ("Key Details", {
+            "fields": ("public_id", "key", "last_used_at"),
+            "classes": ("collapse",),
+            "description": "System-generated key details"
+        }),
+        ("Audit Information", {
+            "fields": ("created_at", "updated_at", "deleted_at"),
+            "classes": ("collapse",),
+            "description": "Timestamps for auditing"
+        }),
+    )
+
+    def is_expired(self, obj):
+        """Display expiration status in admin list."""
+        return obj.is_expired
+    is_expired.boolean = True
+    is_expired.short_description = "Expired"

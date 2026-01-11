@@ -1,11 +1,33 @@
 # Sports club (synchronous version)
+# Dependencies with explicit version pinning for reproducible builds and security
+# This follows the 12-factor app methodology of explicit dependency declaration
 
-django-cors-headers
-django-environ
-django-json-widget
-django-nanoid-field
-django-ninja
-django-ratelimit
-pydantic[email]
-psycopg[binary,pool]
-whitenoise
+# Core Django framework
+Django==6.0.1
+
+# Django extensions and utilities
+django-cors-headers==4.9.0
+django-environ==0.12.0
+django-json-widget==2.1.1
+django-nanoid-field==0.1.4
+django-ninja==1.5.2
+django-ratelimit==4.1.0
+
+# Database
+psycopg[binary,pool]==3.3.2
+
+# Data validation
+pydantic[email]==2.12.5
+
+# Static file serving
+whitenoise==6.11.0
+
+# Runtime dependencies (installed by the above)
+# asgiref==3.11.0
+# annotated-types==0.7.0
+# nanoid==2.0.0
+# pydantic_core==2.41.5
+# typing_extensions==4.15.0
+# typing-inspection==0.4.2
+# email-validator==2.3.0
+# sqlparse==0.5.5

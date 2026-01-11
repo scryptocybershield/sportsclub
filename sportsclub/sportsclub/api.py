@@ -8,6 +8,8 @@ from ninja.errors import ValidationError
 from people.api import router as people_router
 from scheduling.api import router as scheduling_router
 
+from core.auth import get_api_key_auth
+
 api = NinjaAPI(
     title="Athletics Sports Club API",
     version="1.0.0",
@@ -16,6 +18,7 @@ api = NinjaAPI(
     openapi_url="/openapi.json",  # OpenAPI spec at /api/v1/openapi.json
     # Unique ID to prevent "multiple NinjaAPIs" conflicts during test discovery
     urls_namespace="sportsclub_api",
+    auth=get_api_key_auth(),
 )
 
 
