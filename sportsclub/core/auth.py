@@ -1,6 +1,7 @@
 # core/auth.py
 """Authentication classes for Django Ninja API."""
 
+from typing import Optional
 
 from django.contrib.auth.models import User
 from ninja import Header
@@ -75,13 +76,43 @@ class ApiKeyHeaderAuth:
         return api_key.user
 
 
+class DynamicAuth:
+    """Dynamic authentication that checks DEBUG mode at runtime."""
+
+    def __init__(self):
+        self.header_auth = ApiKeyHeaderAuth()
+
+    def __call__(self, request, key: Optional[str] = Header(None)) -> User | None:
+        """
+        Authenticate user, bypassing authentication in DEBUG mode.
+
+        In DEBUG mode, returns a dummy user for testing.
+        In production mode, uses X-API-Key header authentication.
+        """
+        from django.conf import settings
+        print(f"[DynamicAuth] DEBUG={settings.DEBUG}, key provided={'yes' if key else 'no'}")
+
+        if settings.DEBUG:
+            # Return a dummy user for testing
+            # Get or create a test user (username='test', email='test@example.com')
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            user, _ = User.objects.get_or_create(
+                username='test',
+                defaults={'email': 'test@example.com'}
+            )
+            print(f"[DynamicAuth] DEBUG mode, returning user: {user.username}")
+            return user
+
+        # Use header authentication
+        if key is None:
+            print("[DynamicAuth] No API key provided in production mode")
+            return None
+        print("[DynamicAuth] Attempting API key authentication")
+        return self.header_auth(request, key)
+
+
 def get_api_key_auth():
     """Get the appropriate authentication class based on configuration."""
-    from django.conf import settings
-
-    # Disable authentication in debug mode for easier testing
-    if settings.DEBUG:
-        return None
-
-    # For now, return the header-based auth
-    return ApiKeyHeaderAuth()
+    # Return DynamicAuth which handles DEBUG mode at runtime
+    return DynamicAuth()

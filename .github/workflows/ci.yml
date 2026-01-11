@@ -93,6 +93,10 @@ jobs:
         working-directory: ./sportsclub
         run: python manage.py migrate
 
+      - name: Check DEBUG setting
+        working-directory: ./sportsclub
+        run: python -c "from django.conf import settings; print('DEBUG:', settings.DEBUG); print('ALLOWED_HOSTS:', settings.ALLOWED_HOSTS)"
+
       - name: Run tests
         working-directory: ./sportsclub
         run: python manage.py test --verbosity=2
@@ -116,10 +120,14 @@ jobs:
 
       - name: Install security tools
         run: |
-          pip install bandit safety pip-audit || true
-          pip install trufflehog || true
-          pip install gitleaks || true
-          pip install semgrep || true
+          pip install --break-system-packages --timeout 60 bandit safety pip-audit || echo "Failed to install bandit/safety/pip-audit"
+          pip install --break-system-packages --timeout 60 trufflehog || echo "Failed to install trufflehog"
+          pip install --break-system-packages --timeout 60 gitleaks || echo "Failed to install gitleaks"
+          pip install --break-system-packages --timeout 60 semgrep || echo "Failed to install semgrep"
+          # Verify installations
+          python -c "import bandit; print('bandit version:', bandit.__version__)" || true
+          python -c "import safety; print('safety version:', safety.__version__)" || true
+          python -c "import pip_audit; print('pip-audit version:', pip_audit.__version__)" || true
 
       - name: Django security check
         working-directory: ./sportsclub
@@ -128,7 +136,7 @@ jobs:
       - name: Bandit scan
         run: |
           cd sportsclub
-          bandit -r . --severity-level high --format json --output ../bandit-report.json || echo '{"errors": ["Bandit scan failed"]}' > ../bandit-report.json
+          bandit -r . --severity-level high --format json --output ../bandit-report.json --exit-zero || echo '{"errors": ["Bandit scan failed"]}' > ../bandit-report.json
 
       - name: Safety dependency scan
         run: |
@@ -136,7 +144,7 @@ jobs:
 
       - name: Pip-audit vulnerability scan
         run: |
-          pip-audit --desc on --format json --output pip-audit-report.json || echo '{"errors": ["Pip-audit scan failed"]}' > pip-audit-report.json
+          pip-audit --desc on --format json --output pip-audit-report.json --exit-zero || echo '{"errors": ["Pip-audit scan failed"]}' > pip-audit-report.json
 
       - name: TruffleHog secrets scan
         run: |
@@ -144,11 +152,11 @@ jobs:
 
       - name: Gitleaks secrets scan
         run: |
-          gitleaks detect --source=. --report-format=json --report-path=gitleaks-report.json || echo '{"errors": ["Gitleaks scan failed"]}' > gitleaks-report.json
+          gitleaks detect --source=. --report-format=json --report-path=gitleaks-report.json --verbose || echo '{"errors": ["Gitleaks scan failed"]}' > gitleaks-report.json
 
       - name: Semgrep static analysis
         run: |
-          semgrep scan --config=auto --json --output semgrep-report.json || echo '{"errors": ["Semgrep scan failed"]}' > semgrep-report.json
+          semgrep scan --config=auto --json --output semgrep-report.json --no-error || echo '{"errors": ["Semgrep scan failed"]}' > semgrep-report.json
 
       - name: Upload Bandit report
         uses: actions/upload-artifact@v4
