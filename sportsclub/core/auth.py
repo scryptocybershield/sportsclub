@@ -23,8 +23,7 @@ class ApiKeyAuth(HttpBearer):
 
         try:
             api_key = ApiKey.objects.select_related("user").get(
-                key=token,
-                is_active=True
+                key=token, is_active=True
             )
         except ApiKey.DoesNotExist:
             return None
@@ -57,10 +56,7 @@ class ApiKeyHeaderAuth:
             User object if authentication successful, None otherwise
         """
         try:
-            api_key = ApiKey.objects.select_related("user").get(
-                key=key,
-                is_active=True
-            )
+            api_key = ApiKey.objects.select_related("user").get(key=key, is_active=True)
         except ApiKey.DoesNotExist:
             return None
 
@@ -88,17 +84,18 @@ class DynamicAuth:
         In production mode, uses X-API-Key header authentication.
         """
         from django.conf import settings
-        key_provided = 'yes' if key else 'no'
+
+        key_provided = "yes" if key else "no"
         print(f"[DynamicAuth] DEBUG={settings.DEBUG}, key provided={key_provided}")
 
         if settings.DEBUG:
             # Return a dummy user for testing
             # Get or create a test user (username='test', email='test@example.com')
             from django.contrib.auth import get_user_model
+
             user_model = get_user_model()
             user, _ = user_model.objects.get_or_create(
-                username='test',
-                defaults={'email': 'test@example.com'}
+                username="test", defaults={"email": "test@example.com"}
             )
             print(f"[DynamicAuth] DEBUG mode, returning user: {user.username}")
             return user

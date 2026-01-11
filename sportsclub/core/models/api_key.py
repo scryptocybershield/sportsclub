@@ -14,18 +14,13 @@ class ApiKey(Auditory):
     public_id = NanoidField(unique=True, editable=False, db_index=True)
     key = NanoidField(unique=True, editable=False, db_index=True)
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="api_keys"
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="api_keys"
     )
     name = models.CharField(
-        max_length=100,
-        help_text="Descriptive name for this API key"
+        max_length=100, help_text="Descriptive name for this API key"
     )
     expires_at = models.DateTimeField(
-        null=True,
-        blank=True,
-        help_text="Optional expiration date"
+        null=True, blank=True, help_text="Optional expiration date"
     )
     last_used_at = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
