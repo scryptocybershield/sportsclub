@@ -1,8 +1,8 @@
 # core/management/commands/generate_api_key.py
 import json
 
-from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth import get_user_model
+from django.core.management.base import BaseCommand, CommandError
 
 from core.models import ApiKey
 
@@ -38,12 +38,12 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        User = get_user_model()
+        user_model = get_user_model()
 
         try:
-            user = User.objects.get(username=options["username"])
-        except User.DoesNotExist:
-            raise CommandError(f"User '{options['username']}' does not exist")
+            user = user_model.objects.get(username=options["username"])
+        except user_model.DoesNotExist:
+            raise CommandError(f"User '{options['username']}' does not exist") from None
 
         # Parse expiration date if provided
         expires_at = None
@@ -66,14 +66,16 @@ class Command(BaseCommand):
             "key": api_key.key,
             "user": api_key.user.username,
             "name": api_key.name,
-            "expires_at": api_key.expires_at.isoformat() if api_key.expires_at else None,
+            "expires_at": (
+                api_key.expires_at.isoformat() if api_key.expires_at else None
+            ),
             "created_at": api_key.created_at.isoformat(),
         }
 
         if options["output"] == "json":
             self.stdout.write(json.dumps(result, indent=2))
         else:
-            self.stdout.write(self.style.SUCCESS(f"API Key generated successfully!"))
+            self.stdout.write(self.style.SUCCESS("API Key generated successfully!"))
             self.stdout.write(f"Key ID: {api_key.public_id}")
             self.stdout.write(f"API Key: {api_key.key}")
             self.stdout.write(f"User: {api_key.user.username}")

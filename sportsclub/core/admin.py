@@ -78,11 +78,15 @@ class AddressAdmin(admin.ModelAdmin):
 class ApiKeyAdmin(admin.ModelAdmin):
     """Admin interface for ApiKey model."""
 
-    list_display = ["public_id", "key", "user", "name", "is_active", "is_expired", "last_used_at"]
+    list_display = [
+        "public_id", "key", "user", "name", "is_active", "is_expired", "last_used_at"
+    ]
     list_display_links = ["public_id", "key"]
     list_filter = ["is_active", "expires_at"]
     search_fields = ["public_id", "key", "name", "user__username"]
-    readonly_fields = ["public_id", "key", "created_at", "updated_at", "deleted_at", "last_used_at"]
+    readonly_fields = [
+        "public_id", "key", "created_at", "updated_at", "deleted_at", "last_used_at"
+    ]
     list_per_page = 50
     ordering = ["-created_at"]
 

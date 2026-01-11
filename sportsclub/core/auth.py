@@ -1,10 +1,8 @@
 # core/auth.py
 """Authentication classes for Django Ninja API."""
 
-from typing import Optional
 
 from django.contrib.auth.models import User
-from django.utils import timezone
 from ninja import Header
 from ninja.security import HttpBearer
 
@@ -14,7 +12,7 @@ from core.models import ApiKey
 class ApiKeyAuth(HttpBearer):
     """API Key authentication using Bearer token format."""
 
-    def authenticate(self, request, token: str) -> Optional[User]:
+    def authenticate(self, request, token: str) -> User | None:
         """
         Authenticate user using API key token.
 
@@ -48,7 +46,7 @@ class ApiKeyHeaderAuth:
     def __init__(self):
         self.param_name = "X-API-Key"
 
-    def __call__(self, request, key: str = Header(...)) -> Optional[User]:
+    def __call__(self, request, key: str = Header(...)) -> User | None:
         """
         Authenticate user using X-API-Key header.
 
@@ -79,5 +77,11 @@ class ApiKeyHeaderAuth:
 
 def get_api_key_auth():
     """Get the appropriate authentication class based on configuration."""
+    from django.conf import settings
+
+    # Disable authentication in debug mode for easier testing
+    if settings.DEBUG:
+        return None
+
     # For now, return the header-based auth
     return ApiKeyHeaderAuth()

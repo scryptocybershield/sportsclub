@@ -18,8 +18,15 @@ class ApiKey(Auditory):
         on_delete=models.CASCADE,
         related_name="api_keys"
     )
-    name = models.CharField(max_length=100, help_text="Descriptive name for this API key")
-    expires_at = models.DateTimeField(null=True, blank=True, help_text="Optional expiration date")
+    name = models.CharField(
+        max_length=100,
+        help_text="Descriptive name for this API key"
+    )
+    expires_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Optional expiration date"
+    )
     last_used_at = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
 

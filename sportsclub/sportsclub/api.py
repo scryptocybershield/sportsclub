@@ -1,5 +1,6 @@
 # sportsclub/api.py
 from core.api import router as core_router
+from core.auth import get_api_key_auth
 from django.db import IntegrityError
 from django.http import Http404
 from inventory.api import router as inventory_router
@@ -7,8 +8,6 @@ from ninja import NinjaAPI
 from ninja.errors import ValidationError
 from people.api import router as people_router
 from scheduling.api import router as scheduling_router
-
-from core.auth import get_api_key_auth
 
 api = NinjaAPI(
     title="Athletics Sports Club API",
