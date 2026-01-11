@@ -93,10 +93,6 @@ jobs:
         working-directory: ./sportsclub
         run: python manage.py migrate
 
-      - name: Check DEBUG setting
-        working-directory: ./sportsclub
-        run: python -c "from django.conf import settings; print('DEBUG:', settings.DEBUG); print('ALLOWED_HOSTS:', settings.ALLOWED_HOSTS)"
-
       - name: Run tests
         working-directory: ./sportsclub
         run: python manage.py test --verbosity=2

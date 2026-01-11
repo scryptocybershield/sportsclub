@@ -1,8 +1,6 @@
 # core/auth.py
 """Authentication classes for Django Ninja API."""
 
-from typing import Optional
-
 from django.contrib.auth.models import User
 from ninja import Header
 from ninja.security import HttpBearer
@@ -82,7 +80,7 @@ class DynamicAuth:
     def __init__(self):
         self.header_auth = ApiKeyHeaderAuth()
 
-    def __call__(self, request, key: Optional[str] = Header(None)) -> User | None:
+    def __call__(self, request, key: str | None = Header(None)) -> User | None:
         """
         Authenticate user, bypassing authentication in DEBUG mode.
 
@@ -90,14 +88,15 @@ class DynamicAuth:
         In production mode, uses X-API-Key header authentication.
         """
         from django.conf import settings
-        print(f"[DynamicAuth] DEBUG={settings.DEBUG}, key provided={'yes' if key else 'no'}")
+        key_provided = 'yes' if key else 'no'
+        print(f"[DynamicAuth] DEBUG={settings.DEBUG}, key provided={key_provided}")
 
         if settings.DEBUG:
             # Return a dummy user for testing
             # Get or create a test user (username='test', email='test@example.com')
             from django.contrib.auth import get_user_model
-            User = get_user_model()
-            user, _ = User.objects.get_or_create(
+            user_model = get_user_model()
+            user, _ = user_model.objects.get_or_create(
                 username='test',
                 defaults={'email': 'test@example.com'}
             )
