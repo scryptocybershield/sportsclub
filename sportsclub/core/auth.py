@@ -84,13 +84,17 @@ class DynamicAuth:
         In production mode, uses X-API-Key header authentication.
         """
         import os
+
         from django.conf import settings
 
         key_provided = "yes" if key else "no"
         # Check both settings.DEBUG and environment variable
-        debug_env = os.getenv('DEBUG', 'False').lower() == 'true'
+        debug_env = os.getenv("DEBUG", "False").lower() == "true"
         debug_mode = debug_env or settings.DEBUG
-        print(f"[DynamicAuth] DEBUG={settings.DEBUG}, env DEBUG={os.getenv('DEBUG')}, debug_mode={debug_mode}, key provided={key_provided}")
+        print(
+            f"[DynamicAuth] DEBUG={settings.DEBUG}, env DEBUG={os.getenv('DEBUG')}, "
+            f"debug_mode={debug_mode}, key provided={key_provided}"
+        )
 
         if debug_mode:
             # Return a dummy user for testing
