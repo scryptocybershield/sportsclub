@@ -122,6 +122,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+.pyre_configuration
+.watchmanconfig
+pyre_results/
 
 # IDEs
 .idea/
@@ -162,4 +165,5 @@ MGREP_INDEX.md
 MGREP_DOCUMENTATION.md
 COMMIT_ANALYSIS.md
 TEST_FAILURE_ANALYSIS.md
+SECURITY_IMPLEMENTATION_DETAILS.md
 
