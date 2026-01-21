@@ -25,5 +25,14 @@ COPY sportsclub/ .
 # Collect static files (needed when serving through a reverse proxy)
 RUN python manage.py collectstatic --noinput
 
-# Run uvicorn
+# Create non-privileged user for security
+RUN useradd --create-home --shell /bin/bash appuser
+
+# Change ownership of application directory
+RUN chown -R appuser:appuser /app
+
+# Switch to non-privileged user
+USER appuser
+
+# Run uvicorn as non-privileged user
 CMD ["uvicorn", "sportsclub.asgi:application", "--host", "0.0.0.0", "--port", "8080"]

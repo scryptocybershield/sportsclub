@@ -1,0 +1,82 @@
+# docker-compose.production.yml
+# Production override for secure deployment
+# Use with: docker compose -f docker-compose.yml -f docker-compose.production.yml up -d
+
+version: '3.8'
+
+services:
+  postgres:
+    # Remove port exposure to external network
+    ports: []
+    # Ensure database is only accessible internally
+    networks:
+      default:
+        aliases:
+          - postgres.internal
+    # Restart policy for production
+    restart: unless-stopped
+
+  app-blue:
+    # Use Docker Hub image instead of local build
+    image: ${DOCKER_USERNAME}/sportsclub:${APP_VERSION:-latest}
+    # Production restart policy
+    restart: unless-stopped
+    # Ensure DEBUG is False in production
+    environment:
+      DEBUG: "False"
+      ALLOWED_HOSTS: ${PRODUCTION_HOSTS:-localhost,127.0.0.1}
+    # Remove any port exposure (already only exposed internally via expose)
+    # Healthcheck with more aggressive settings for production
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/openapi.json"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  app-green:
+    # Use Docker Hub image instead of local build
+    image: ${DOCKER_USERNAME}/sportsclub:${APP_VERSION:-latest}
+    # Production restart policy
+    restart: unless-stopped
+    # Ensure DEBUG is False in production
+    environment:
+      DEBUG: "False"
+      ALLOWED_HOSTS: ${PRODUCTION_HOSTS:-localhost,127.0.0.1}
+    # Healthcheck with more aggressive settings for production
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/openapi.json"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  nginx:
+    # Expose only on port 80 (standard HTTP)
+    ports:
+      - "80:80"
+    # Production restart policy
+    restart: unless-stopped
+    # Active color for blue-green deployment (blue or green)
+    environment:
+      ACTIVE_COLOR: ${ACTIVE_COLOR:-blue}
+    # Depend on both app services
+    depends_on:
+      app-blue:
+        condition: service_healthy
+      app-green:
+        condition: service_healthy
+
+# Production-specific network configuration (optional)
+networks:
+  default:
+    # Use default driver, could be changed to overlay for swarm
+    driver: bridge
+    # Internal network for better isolation (commented as it breaks DNS)
+    # internal: true
+
+# Volume configuration remains the same
+volumes:
+  postgres:
+    # Ensure volume persists
+    driver: local
