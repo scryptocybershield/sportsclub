@@ -154,6 +154,20 @@ jobs:
         run: |
           semgrep scan --config=auto --json --output semgrep-report.json --no-error || echo '{"errors": ["Semgrep scan failed"]}' > semgrep-report.json
 
+      - name: Bearer data flow security scan
+        run: |
+          # Install Bearer CLI
+          curl -sfL https://raw.githubusercontent.com/Bearer/bearer/main/install.sh | sh
+          echo "$HOME/.bearer/bin" >> $GITHUB_PATH
+          # Run Bearer scan focusing on data flow and PII
+          bearer scan . \
+            --skip-path "venv/**,**/migrations/**,**/__pycache__/**" \
+            --format json \
+            --output bearer-report.json \
+            --severity high,medium \
+            --report security \
+            --exit-zero || echo '{"errors": ["Bearer scan failed"]}' > bearer-report.json
+
       - name: Upload Bandit report
         uses: actions/upload-artifact@v4
         if: always()
@@ -200,6 +214,14 @@ jobs:
         with:
           name: semgrep-security-report
           path: semgrep-report.json
+          retention-days: 7
+
+      - name: Upload Bearer report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bearer-security-report
+          path: bearer-report.json
           retention-days: 7
 
   build:
