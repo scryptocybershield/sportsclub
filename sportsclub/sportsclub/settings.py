@@ -154,6 +154,6 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 # Production: Specific origins
 # CORS_ALLOWED_ORIGINS = [
-#     "https://sportsclub.com",
-#     "https://app.sportsclub.com",
+#     "http://localhost:3000",
+#     "http://127.0.0.1:3000",
 # ]

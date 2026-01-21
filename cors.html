@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CORS Test Lab</title>
+    <style>
+        body { font-family: sans-serif; padding: 2rem; }
+        .box { padding: 1rem; border: 1px solid #ccc; margin-top: 1rem; }
+        .error { color: red; background: #ffe6e6; }
+        .success { color: green; background: #e6ffe6; }
+    </style>
+</head>
+<body>
+    <h1>Front-end at port 3000</h1>
+    <button type="submit" onclick="getData()">Fetch athletes from REST API at port 8000</button>
+
+    <div id="output" class="box">Waiting for request...</div>
+
+    <script>
+        async function getData() {
+            const output = document.getElementById('output');
+            output.textContent = "Loading...";
+            output.className = "box";
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/v1/people/athletes');
+                
+                if (!response.ok) throw new Error("Request failed");
+                
+                const data = await response.json();
+                output.textContent = "Success! " + JSON.stringify(data);
+                output.className = "box success";
+            } catch (error) {
+                output.textContent = "Blocked! Check your browser console for the red CORS error.";
+                output.className = "box error";
+                console.error("CORS error caught in code:", error);
+            }
+        }
+    </script>
+</body>
+</html>
