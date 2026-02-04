@@ -56,19 +56,19 @@ jobs:
 
           # Check that requirements.txt is up-to-date with requirements.in
           echo "Verifying requirements.txt..."
-          pip-compile --generate-hashes --allow-unsafe --output-file=requirements.txt.new requirements.in
+          pip-compile --generate-hashes --allow-unsafe --no-header --output-file=requirements.txt.new requirements.in
           if ! diff -u requirements.txt requirements.txt.new; then
             echo "ERROR: requirements.txt is out of date."
-            echo "Please run: pip-compile --generate-hashes --allow-unsafe requirements.in"
+            echo "Please run: pip-compile --generate-hashes --allow-unsafe --no-header requirements.in"
             exit 1
           fi
 
           # Check that requirements-dev.txt is up-to-date with requirements-dev.in
           echo "Verifying requirements-dev.txt..."
-          pip-compile --generate-hashes --allow-unsafe --output-file=requirements-dev.txt.new requirements-dev.in
+          pip-compile --generate-hashes --allow-unsafe --no-header --output-file=requirements-dev.txt.new requirements-dev.in
           if ! diff -u requirements-dev.txt requirements-dev.txt.new; then
             echo "ERROR: requirements-dev.txt is out of date."
-            echo "Please run: pip-compile --generate-hashes --allow-unsafe requirements-dev.in"
+            echo "Please run: pip-compile --generate-hashes --allow-unsafe --no-header requirements-dev.in"
             exit 1
           fi
 
