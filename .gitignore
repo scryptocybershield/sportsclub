@@ -169,4 +169,10 @@ TEST_FAILURE_ANALYSIS.md
 SECURITY_IMPLEMENTATION_DETAILS.md
 BANDIT_SECURITY_ANALYSIS.md
 BEARER_SECURITY_ANALYSIS.md
+CLAUDE.md
+IOCPARSER_SECURITY_ANALYSIS.md
+docker-compose_iocs.txt
+ioc_analysis_results/
+prueba_ioc.txt
+requirements_iocs.txt
 
