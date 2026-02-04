@@ -47,8 +47,10 @@ jobs:
 
       - name: Verify dependency integrity
         run: |
-          # Install pip-tools for dependency verification
-          pip install pip-tools
+          # Install and upgrade pip-tools for dependency verification
+          # Ensure compatibility with newer pip versions
+          python -m pip install --upgrade pip
+          pip install --upgrade pip-tools
 
           # Check that requirements.txt is up-to-date with requirements.in
           echo "Verifying requirements.txt..."
