@@ -47,10 +47,12 @@ jobs:
 
       - name: Verify dependency integrity
         run: |
-          # Install and upgrade pip-tools for dependency verification
-          # Ensure compatibility with newer pip versions
-          python -m pip install --upgrade pip
-          pip install --upgrade pip-tools
+          # Install compatible pip version for pip-tools
+          # pip-tools 7.5.2 requires pip < 24 due to 'allow_all_prereleases' attribute
+          python -m pip install "pip<24"
+
+          # Install pip-tools for dependency verification
+          pip install pip-tools
 
           # Check that requirements.txt is up-to-date with requirements.in
           echo "Verifying requirements.txt..."
