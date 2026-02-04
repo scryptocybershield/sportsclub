@@ -1,0 +1,44 @@
+# Dependabot configuration for sportsclub project
+# Automatically monitors dependencies for security vulnerabilities and updates
+
+version: 2
+updates:
+  # Python dependencies (pip)
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    # Group all updates into a single PR for easier review
+    groups:
+      python-packages:
+        patterns:
+          - "*"
+    # Security updates should be prioritized
+    open-pull-requests-limit: 10
+    reviewers:
+      - "scryptocybershield"
+    # Only update dependencies that have security advisories
+    # Set to false to get all version updates
+    security-updates-only: false
+    # Custom commit message
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    # Ignore major version updates for now (can be reviewed manually)
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  # GitHub Actions workflows
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    # Group all GitHub Actions updates
+    groups:
+      github-actions:
+        patterns:
+          - "*"

@@ -1,0 +1,6 @@
+# Development dependencies for sportsclub application
+# Include all production dependencies with exact versions and hashes
+-r requirements.txt
+
+# Development tools
+ruff~=0.14.10

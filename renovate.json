@@ -1,0 +1,24 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "pip_requirements": {
+    "fileMatch": ["requirements\\.(in|txt)$", "requirements-dev\\.(in|txt)$"]
+  },
+  "schedule": ["weekly on Monday"],
+  "automerge": false,
+  "platformAutomerge": false,
+  "prHourlyLimit": 2,
+  "prConcurrentLimit": 10,
+  "rebaseWhen": "conflicted",
+  "ignoreDeps": [],
+  "rangeStrategy": "bump",
+  "commitMessagePrefix": "chore(deps):",
+  "commitMessageAction": "update",
+  "commitMessageTopic": "{{depName}}",
+  "commitMessageExtra": "to {{newVersion}}",
+  "labels": ["dependencies", "automated"],
+  "assignees": [],
+  "reviewers": []
+}

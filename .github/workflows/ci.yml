@@ -45,6 +45,42 @@ jobs:
       - name: Run Ruff formatter check
         run: ruff format --check .
 
+      - name: Verify dependency integrity
+        run: |
+          # Install pip-tools for dependency verification
+          pip install pip-tools
+
+          # Check that requirements.txt is up-to-date with requirements.in
+          echo "Verifying requirements.txt..."
+          pip-compile --generate-hashes --allow-unsafe --output-file=requirements.txt.new requirements.in
+          if ! diff -u requirements.txt requirements.txt.new; then
+            echo "ERROR: requirements.txt is out of date."
+            echo "Please run: pip-compile --generate-hashes --allow-unsafe requirements.in"
+            exit 1
+          fi
+
+          # Check that requirements-dev.txt is up-to-date with requirements-dev.in
+          echo "Verifying requirements-dev.txt..."
+          pip-compile --generate-hashes --allow-unsafe --output-file=requirements-dev.txt.new requirements-dev.in
+          if ! diff -u requirements-dev.txt requirements-dev.txt.new; then
+            echo "ERROR: requirements-dev.txt is out of date."
+            echo "Please run: pip-compile --generate-hashes --allow-unsafe requirements-dev.in"
+            exit 1
+          fi
+
+          # Verify hashes are present in both files
+          echo "Verifying cryptographic hashes..."
+          if ! grep -q "^[^#].*--hash=sha256:" requirements.txt; then
+            echo "ERROR: requirements.txt missing cryptographic hashes."
+            exit 1
+          fi
+          if ! grep -q "^[^#].*--hash=sha256:" requirements-dev.txt; then
+            echo "ERROR: requirements-dev.txt missing cryptographic hashes."
+            exit 1
+          fi
+
+          echo "✓ All dependency files are up-to-date and have cryptographic hashes."
+
   test:
     name: Test
     runs-on: ubuntu-latest
@@ -86,7 +122,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install --require-hashes -r requirements.txt
 
 
       - name: Run migrations
@@ -112,7 +148,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./sportsclub
-        run: pip install -r ../requirements.txt
+        run: pip install --require-hashes -r ../requirements.txt
 
       - name: Install security tools
         run: |
