@@ -125,7 +125,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
+          # Ensure compatible pip version for hash verification
+          python -m pip install "pip<24"
           pip install --require-hashes -r requirements.txt
 
 
