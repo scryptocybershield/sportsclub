@@ -157,6 +157,10 @@ jobs:
           python -m pip install "pip<24"
           pip install --require-hashes -r ../requirements.txt
 
+      - name: Django security check
+        working-directory: ./sportsclub
+        run: python manage.py check --deploy
+
       - name: Install security tools
         run: |
           python -m venv security-venv
@@ -165,16 +169,18 @@ jobs:
           pip install --upgrade pip
           pip install --timeout 60 bandit safety pip-audit || echo "Failed to install bandit/safety/pip-audit"
           pip install --timeout 60 trufflehog || echo "Failed to install trufflehog"
-          pip install --timeout 60 gitleaks || echo "Failed to install gitleaks"
           pip install --timeout 60 semgrep || echo "Failed to install semgrep"
+          # Download and install gitleaks binary
+          curl -sSL https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-amd64 -o gitleaks
+          chmod +x gitleaks
+          mkdir -p ~/.local/bin
+          mv gitleaks ~/.local/bin/
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
           # Verify installations
           python -c "import bandit; print('bandit version:', bandit.__version__)" || true
           python -c "import safety; print('safety version:', safety.__version__)" || true
           python -c "import pip_audit; print('pip-audit version:', pip_audit.__version__)" || true
-
-      - name: Django security check
-        working-directory: ./sportsclub
-        run: python manage.py check --deploy
+          gitleaks version || echo "Failed to verify gitleaks"
 
       - name: Bandit scan
         run: |
