@@ -167,11 +167,11 @@ jobs:
           echo "$PWD/security-venv/bin" >> $GITHUB_PATH
           source security-venv/bin/activate
           pip install --upgrade pip
-          pip install --timeout 60 'tomli>=2.2.1' bandit safety pip-audit || echo "Failed to install tomli/bandit/safety/pip-audit"
+          pip install --timeout 60 setuptools 'tomli>=2.2.1' bandit safety pip-audit || echo "Failed to install setuptools/tomli/bandit/safety/pip-audit"
           pip install --timeout 60 trufflehog || echo "Failed to install trufflehog"
           pip install --timeout 60 semgrep || echo "Failed to install semgrep"
           # Download and install gitleaks binary
-          curl -L -H 'Accept: application/octet-stream' -sSL https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-amd64 -o gitleaks
+          curl -L -H 'Accept: application/octet-stream' -sSL https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-x64 -o gitleaks
           chmod +x gitleaks
           file gitleaks || echo "Could not determine file type"
           mkdir -p ~/.local/bin
@@ -190,7 +190,7 @@ jobs:
 
       - name: Safety dependency scan
         run: |
-          safety check --output=json --output=safety-report.json
+          safety check --json --output safety-report.json
 
       - name: Pip-audit vulnerability scan
         run: |
