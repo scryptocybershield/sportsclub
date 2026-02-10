@@ -167,18 +167,19 @@ jobs:
           echo "$PWD/security-venv/bin" >> $GITHUB_PATH
           source security-venv/bin/activate
           pip install --upgrade pip
-          pip install --timeout 60 bandit safety pip-audit || echo "Failed to install bandit/safety/pip-audit"
+          pip install --timeout 60 'tomli>=2.2.1' bandit safety pip-audit || echo "Failed to install tomli/bandit/safety/pip-audit"
           pip install --timeout 60 trufflehog || echo "Failed to install trufflehog"
           pip install --timeout 60 semgrep || echo "Failed to install semgrep"
           # Download and install gitleaks binary
-          curl -sSL https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-amd64 -o gitleaks
+          curl -L -H 'Accept: application/octet-stream' -sSL https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-amd64 -o gitleaks
           chmod +x gitleaks
+          file gitleaks || echo "Could not determine file type"
           mkdir -p ~/.local/bin
           mv gitleaks ~/.local/bin/
           echo "$HOME/.local/bin" >> $GITHUB_PATH
           # Verify installations
           python -c "import bandit; print('bandit version:', bandit.__version__)" || true
-          python -c "import safety; print('safety version:', safety.__version__)" || true
+          python -c "import pkg_resources; print(pkg_resources.get_distribution('safety').version)" || true
           python -c "import pip_audit; print('pip-audit version:', pip_audit.__version__)" || true
           gitleaks version || echo "Failed to verify gitleaks"
 
@@ -189,7 +190,7 @@ jobs:
 
       - name: Safety dependency scan
         run: |
-          safety check --json --output safety-report.json
+          safety check --output=json --output=safety-report.json
 
       - name: Pip-audit vulnerability scan
         run: |
