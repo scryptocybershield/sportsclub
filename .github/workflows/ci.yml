@@ -159,10 +159,14 @@ jobs:
 
       - name: Install security tools
         run: |
-          pip install --break-system-packages --timeout 60 bandit safety pip-audit || echo "Failed to install bandit/safety/pip-audit"
-          pip install --break-system-packages --timeout 60 trufflehog || echo "Failed to install trufflehog"
-          pip install --break-system-packages --timeout 60 gitleaks || echo "Failed to install gitleaks"
-          pip install --break-system-packages --timeout 60 semgrep || echo "Failed to install semgrep"
+          python -m venv security-venv
+          echo "$PWD/security-venv/bin" >> $GITHUB_PATH
+          source security-venv/bin/activate
+          pip install --upgrade pip
+          pip install --timeout 60 bandit safety pip-audit || echo "Failed to install bandit/safety/pip-audit"
+          pip install --timeout 60 trufflehog || echo "Failed to install trufflehog"
+          pip install --timeout 60 gitleaks || echo "Failed to install gitleaks"
+          pip install --timeout 60 semgrep || echo "Failed to install semgrep"
           # Verify installations
           python -c "import bandit; print('bandit version:', bandit.__version__)" || true
           python -c "import safety; print('safety version:', safety.__version__)" || true
@@ -175,15 +179,15 @@ jobs:
       - name: Bandit scan
         run: |
           cd sportsclub
-          bandit -r . --severity-level high --format json --output ../bandit-report.json --exit-zero || echo '{"errors": ["Bandit scan failed"]}' > ../bandit-report.json
+          bandit -r . --severity-level high --format json --output ../bandit-report.json
 
       - name: Safety dependency scan
         run: |
-          safety check --json --output safety-report.json || echo '{"errors": ["Safety scan failed"]}' > safety-report.json
+          safety check --json --output safety-report.json
 
       - name: Pip-audit vulnerability scan
         run: |
-          pip-audit --desc on --format json --output pip-audit-report.json --exit-zero || echo '{"errors": ["Pip-audit scan failed"]}' > pip-audit-report.json
+          pip-audit --desc on --format json --output pip-audit-report.json --exit-on-severity critical
 
       - name: TruffleHog secrets scan
         run: |
@@ -285,6 +289,25 @@ jobs:
           name: trivy-security-report
           path: trivy-report.json
           retention-days: 7
+
+      - name: Check critical vulnerabilities
+        if: always()
+        run: |
+          # Check pip-audit report for critical vulnerabilities
+          if [ -f pip-audit-report.json ]; then
+            CRITICAL_COUNT=$(jq '[.vulnerabilities[] | select(.severity == "CRITICAL")] | length' pip-audit-report.json 2>/dev/null || echo "0")
+            if [ "$CRITICAL_COUNT" -gt 0 ]; then
+              echo "::error::Found $CRITICAL_COUNT CRITICAL vulnerabilities in pip-audit report"
+              exit 1
+            fi
+          fi
+          # Check safety report for high/critical vulnerabilities
+          if [ -f safety-report.json ]; then
+            if jq -e '.vulnerabilities | length > 0' safety-report.json 2>/dev/null; then
+              echo "::error::Found vulnerabilities in safety report"
+              exit 1
+            fi
+          fi
 
   build:
     name: Build Docker Image

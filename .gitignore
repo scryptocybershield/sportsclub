@@ -171,6 +171,7 @@ BANDIT_SECURITY_ANALYSIS.md
 BEARER_SECURITY_ANALYSIS.md
 CLAUDE.md
 IOCPARSER_SECURITY_ANALYSIS.md
+COMMANDS_USED.md
 docker-compose_iocs.txt
 ioc_analysis_results/
 prueba_ioc.txt
