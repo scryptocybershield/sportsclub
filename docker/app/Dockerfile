@@ -34,4 +34,5 @@ RUN chown -R appuser:appuser /app
 USER appuser
 
 # Run uvicorn as non-privileged user
+# Production hardened container configuration
 CMD ["uvicorn", "sportsclub.asgi:application", "--host", "0.0.0.0", "--port", "8080"]
