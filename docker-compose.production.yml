@@ -80,3 +80,4 @@ volumes:
   postgres:
     # Ensure volume persists
     driver: local
+    # Production hardened configuration complete
