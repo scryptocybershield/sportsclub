@@ -180,5 +180,5 @@ For debugging, temporarily set `DEBUG=True` in `.env.production` and recreate se
 
 **Delivery Date:** 2026-01-21
 **Project:** Sports Club Django Application
-**Author:** Claude Code
+**Author:** Deployment Automation Team
 **Repository:** https://github.com/jsabater/sportsclub

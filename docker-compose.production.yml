@@ -2,8 +2,6 @@
 # Production override for secure deployment
 # Use with: docker compose -f docker-compose.yml -f docker-compose.production.yml up -d
 
-version: '3.8'
-
 services:
   postgres:
     # Remove port exposure to external network
