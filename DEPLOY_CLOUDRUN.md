@@ -2,6 +2,7 @@
 
 ## Comando de Despliegue Actualizado
 
+### Comando Básico (con Buildpacks)
 ```bash
 gcloud run deploy sportsclub-prod \
   --source . \
@@ -13,6 +14,40 @@ gcloud run deploy sportsclub-prod \
   --max-instances 3 \
   --min-instances 0 \
   --service-account=runner-sportsclub@calcium-task-479417-u6.iam.gserviceaccount.com
+```
+
+### Comando con Dockerfile Personalizado (Recomendado)
+```bash
+gcloud run deploy sportsclub-prod \
+  --source . \
+  --region europe-west1 \
+  --service-account=runner-sportsclub@calcium-task-479417-u6.iam.gserviceaccount.com \
+  --set-env-vars="DEBUG=False,ALLOWED_HOSTS=sportsclub-prod-866059218856.europe-west1.run.app,sportsclub-prod-rkxvcydueq-ew.a.run.app,sportsclub-muller.es,www.sportsclub-muller.es,SECRET_KEY=\$(openssl rand -base64 64)" \
+  --memory=512Mi \
+  --timeout=300 \
+  --allow-unauthenticated \
+  --quiet
+```
+
+### Usando Archivo de Variables de Entorno
+```bash
+# Crear archivo env_vars.yaml
+cat > env_vars.yaml << EOF
+ALLOWED_HOSTS: "sportsclub-prod-866059218856.europe-west1.run.app,sportsclub-prod-rkxvcydueq-ew.a.run.app,sportsclub-muller.es,www.sportsclub-muller.es"
+DEBUG: "False"
+SECRET_KEY: "\$(openssl rand -base64 64)"
+EOF
+
+# Desplegar
+gcloud run deploy sportsclub-prod \
+  --source . \
+  --region europe-west1 \
+  --service-account=runner-sportsclub@calcium-task-479417-u6.iam.gserviceaccount.com \
+  --env-vars-file=env_vars.yaml \
+  --memory=512Mi \
+  --timeout=300 \
+  --allow-unauthenticated \
+  --quiet
 ```
 
 ## Justificación de Seguridad
@@ -130,3 +165,97 @@ La implementación de una cuenta de servicio específica con permisos mínimos s
 **Impacto de seguridad:** ALTO
 **Complejidad de implementación:** BAJA
 **Beneficio de seguridad:** ALTO
+
+## Solución de Problemas Comunes
+
+### 1. Error: `ModuleNotFoundError: No module named 'app'`
+**Causa:** Buildpacks no identifica correctamente la aplicación Django
+**Solución:** Usar Dockerfile personalizado
+```dockerfile
+FROM python:3.13-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+WORKDIR /app/sportsclub
+RUN python manage.py collectstatic --noinput
+RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+USER appuser
+ENV PYTHONUNBUFFERED=1 PORT=8080
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "--threads", "8", "sportsclub.wsgi:application"]
+```
+
+### 2. Error: `HTTP 400 Bad Request`
+**Causa:** `ALLOWED_HOSTS` no configurado cuando `DEBUG=False`
+**Solución:** Configurar `ALLOWED_HOSTS` con todas las URLs necesarias
+```bash
+ALLOWED_HOSTS=sportsclub-prod-866059218856.europe-west1.run.app,sportsclub-prod-rkxvcydueq-ew.a.run.app,sportsclub-muller.es,www.sportsclub-muller.es
+```
+
+### 3. Error: `CSS no se carga (404 en archivos estáticos)`
+**Causa:** Archivos estáticos no recolectados
+**Solución:** Agregar `collectstatic` al Dockerfile
+```dockerfile
+WORKDIR /app/sportsclub
+RUN python manage.py collectstatic --noinput
+```
+
+### 4. Error: `gunicorn not found in PATH`
+**Causa:** Buildpacks no instala gunicorn automáticamente
+**Solución:** Asegurar que `gunicorn` está en `requirements.txt`
+```txt
+gunicorn==21.2.0
+```
+
+### 5. Error: `Permission denied` al ejecutar `collectstatic`
+**Causa:** Usuario sin permisos de escritura
+**Solución:** Ejecutar `collectstatic` como root antes de cambiar a usuario no-privilegiado
+```dockerfile
+# Ejecutar como root
+RUN python manage.py collectstatic --noinput
+# Luego cambiar a usuario no-root
+RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+USER appuser
+```
+
+## Verificación del Despliegue
+
+### 1. Verificar servicio activo
+```bash
+curl -I https://sportsclub-prod-866059218856.europe-west1.run.app/
+# Debe devolver HTTP 200
+```
+
+### 2. Verificar archivos estáticos
+```bash
+curl -I https://sportsclub-prod-866059218856.europe-west1.run.app/static/admin/css/base.css
+# Debe devolver HTTP 200 con cabeceras de cache
+```
+
+### 3. Verificar API
+```bash
+curl -s https://sportsclub-prod-866059218856.europe-west1.run.app/api/v1/openapi.json | head -5
+# Debe devolver JSON válido
+```
+
+### 4. Verificar cuenta de servicio
+```bash
+gcloud run services describe sportsclub-prod \
+  --region europe-west1 \
+  --format="value(spec.template.spec.serviceAccountName)"
+# Debe devolver: runner-sportsclub@calcium-task-479417-u6.iam.gserviceaccount.com
+```
+
+## URLs del Servicio Desplegado
+- **Aplicación:** https://sportsclub-prod-866059218856.europe-west1.run.app/
+- **API Documentation:** https://sportsclub-prod-866059218856.europe-west1.run.app/api/v1/docs
+- **Admin Login:** https://sportsclub-prod-866059218856.europe-west1.run.app/admin/login/
+- **Static Files:** https://sportsclub-prod-866059218856.europe-west1.run.app/static/admin/css/base.css
+
+## Configuración Actual (Revisión sportsclub-prod-00003-92b)
+- **DEBUG:** False
+- **ALLOWED_HOSTS:** Configurado con 4 dominios
+- **SECRET_KEY:** Clave de 64 bytes generada dinámicamente
+- **Cuenta de servicio:** runner-sportsclub@... (solo roles/run.admin)
+- **Usuario contenedor:** appuser (non-root)
+- **Static files:** Recolectados y servidos via WhiteNoise

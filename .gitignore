@@ -176,3 +176,4 @@ ioc_analysis_results/
 prueba_ioc.txt
 requirements_iocs.txt
 
+.env.production
