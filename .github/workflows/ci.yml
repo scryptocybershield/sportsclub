@@ -159,14 +159,25 @@ jobs:
 
       - name: Install security tools
         run: |
+          # First upgrade pip, setuptools and tomli to ensure correct versions
+          pip install --upgrade pip setuptools 'tomli>=2.2.1'
+
+          # Install security tools with updated dependencies
           pip install --break-system-packages --timeout 60 bandit safety pip-audit || echo "Failed to install bandit/safety/pip-audit"
           pip install --break-system-packages --timeout 60 trufflehog || echo "Failed to install trufflehog"
-          pip install --break-system-packages --timeout 60 gitleaks || echo "Failed to install gitleaks"
           pip install --break-system-packages --timeout 60 semgrep || echo "Failed to install semgrep"
+
+          # Install gitleaks via binary instead of pip to avoid architecture issues
+          curl -sfL https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-x64 -o ~/.local/bin/gitleaks
+          chmod +x ~/.local/bin/gitleaks
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
           # Verify installations
           python -c "import bandit; print('bandit version:', bandit.__version__)" || true
           python -c "import safety; print('safety version:', safety.__version__)" || true
           python -c "import pip_audit; print('pip-audit version:', pip_audit.__version__)" || true
+          python -c "import pkg_resources; print('pkg_resources available')" || true
+          file ~/.local/bin/gitleaks || true
 
       - name: Django security check
         working-directory: ./sportsclub
@@ -179,7 +190,7 @@ jobs:
 
       - name: Safety dependency scan
         run: |
-          safety check --json --output safety-report.json || echo '{"errors": ["Safety scan failed"]}' > safety-report.json
+          safety check --format json --output safety-report.json || echo '{"errors": ["Safety scan failed"]}' > safety-report.json
 
       - name: Pip-audit vulnerability scan
         run: |
