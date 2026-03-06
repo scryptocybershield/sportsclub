@@ -206,11 +206,11 @@ jobs:
 
       - name: Safety dependency scan
         run: |
-          ./security-core-venv/bin/safety check --json > safety-report.json || echo '{"errors": ["Safety scan failed"]}' > safety-report.json
+          ./security-core-venv/bin/safety check -r requirements.txt --json > safety-report.json || echo '{"errors": ["Safety scan failed"]}' > safety-report.json
 
       - name: Pip-audit vulnerability scan
         run: |
-          ./security-core-venv/bin/pip-audit --desc on --format json --output pip-audit-report.json
+          ./security-core-venv/bin/pip-audit -r requirements.txt --desc on --format json --output pip-audit-report.json
 
       - name: TruffleHog secrets scan
         run: |
@@ -316,6 +316,16 @@ jobs:
       - name: Check critical vulnerabilities
         if: always()
         run: |
+          # Show summary for easier remediation
+          if [ -f pip-audit-report.json ]; then
+            echo "pip-audit findings:"
+            jq -r '.vulnerabilities[]? | "- \(.package // "unknown") \(.id // "unknown-id")"' pip-audit-report.json || true
+          fi
+          if [ -f safety-report.json ]; then
+            echo "safety findings:"
+            jq -r '.vulnerabilities[]? | "- \(.package_name // "unknown") \(.vulnerability_id // "unknown-id")"' safety-report.json || true
+          fi
+
           # Check pip-audit report for critical vulnerabilities
           if [ -f pip-audit-report.json ]; then
             CRITICAL_COUNT=$(jq '[.vulnerabilities[] | select(.severity == "CRITICAL")] | length' pip-audit-report.json 2>/dev/null || echo "0")
