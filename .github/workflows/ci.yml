@@ -192,11 +192,11 @@ jobs:
 
       - name: Safety dependency scan
         run: |
-          safety check --output=json --file=safety-report.json || echo '{"errors": ["Safety scan failed"]}' > safety-report.json
+          safety check --json > safety-report.json || echo '{"errors": ["Safety scan failed"]}' > safety-report.json
 
       - name: Pip-audit vulnerability scan
         run: |
-          pip-audit --desc on --format json --output pip-audit-report.json --exit-on-severity critical
+          pip-audit --desc on --format json --output pip-audit-report.json
 
       - name: TruffleHog secrets scan
         run: |
