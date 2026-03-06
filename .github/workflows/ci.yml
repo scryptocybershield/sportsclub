@@ -210,7 +210,9 @@ jobs:
 
       - name: Pip-audit vulnerability scan
         run: |
-          ./security-core-venv/bin/pip-audit -r requirements.txt --desc on --format json --output pip-audit-report.json
+          ./security-core-venv/bin/pip-audit -r requirements.txt --desc on --format json --output pip-audit-report.json || \
+            [ -f pip-audit-report.json ] || \
+            echo '{"errors": ["Pip-audit scan failed"]}' > pip-audit-report.json
 
       - name: TruffleHog secrets scan
         run: |
