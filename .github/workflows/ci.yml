@@ -149,7 +149,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          python-version: "3.12"
 
       - name: Install dependencies
         working-directory: ./sportsclub
@@ -167,7 +167,8 @@ jobs:
           echo "$PWD/security-venv/bin" >> $GITHUB_PATH
           source security-venv/bin/activate
           pip install --upgrade pip
-          pip install --timeout 60 "click==8.2.1" "typer==0.12.3" "tomli==2.2.1" setuptools bandit safety pip-audit || echo "Failed to install security base tools"
+          pip install --timeout 60 setuptools
+          pip install --timeout 60 "click>=8.2.1,<8.4" "typer>=0.12.3" "tomli>=2.2.1" bandit safety pip-audit || echo "Failed to install security base tools"
           pip install --timeout 60 trufflehog || echo "Failed to install trufflehog"
           pip install --timeout 60 semgrep || echo "Failed to install semgrep"
           # Download and install gitleaks binary
@@ -178,7 +179,6 @@ jobs:
           mv gitleaks ~/.local/bin/
           echo "$HOME/.local/bin" >> $GITHUB_PATH
           # Verify installations
-          pip install setuptools
           python -c "import bandit; print('bandit version:', bandit.__version__)" || true
           python -c "import pkg_resources; print(pkg_resources.get_distribution('safety').version)" || true
           python -c "import pip_audit; print('pip-audit version:', pip_audit.__version__)" || true
