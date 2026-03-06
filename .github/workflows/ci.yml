@@ -166,13 +166,14 @@ jobs:
           python -m venv security-venv
           echo "$PWD/security-venv/bin" >> $GITHUB_PATH
           source security-venv/bin/activate
-          pip install --upgrade pip
-          pip install --timeout 60 setuptools
-          pip install --timeout 60 "click>=8.2.1,<8.4" "typer==0.12.3" "tomli>=2.2.1" bandit safety pip-audit || echo "Failed to install security base tools"
+          pip install --upgrade pip setuptools
+          pip install --timeout 60 "click>=8.2.1,<8.4" "typer==0.12.3" "tomli>=2.2.1" "pydantic>=2.6.0,<2.10.0" bandit safety pip-audit || echo "Failed to install security base tools"
           pip install --timeout 60 trufflehog || echo "Failed to install trufflehog"
           pip install --timeout 60 semgrep || echo "Failed to install semgrep"
           # Download and install gitleaks binary
-          curl -L -H 'Accept: application/octet-stream' -sSL https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-x64 -o gitleaks
+          GITLEAKS_VERSION="8.24.2"
+          curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" -o gitleaks.tar.gz
+          tar -xzf gitleaks.tar.gz gitleaks
           chmod +x gitleaks
           file gitleaks || echo "Could not determine file type"
           mkdir -p ~/.local/bin
@@ -191,7 +192,7 @@ jobs:
 
       - name: Safety dependency scan
         run: |
-          safety check --json --output safety-report.json
+          safety check --output=json --file=safety-report.json
 
       - name: Pip-audit vulnerability scan
         run: |
