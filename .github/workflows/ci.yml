@@ -167,7 +167,7 @@ jobs:
           echo "$PWD/security-venv/bin" >> $GITHUB_PATH
           source security-venv/bin/activate
           pip install --upgrade pip
-          pip install --timeout 60 "click>=8.2.1,<9.0.0a0" "typer>=0.12.3" "tomli>=2.2.1" setuptools bandit safety pip-audit || echo "Failed to install security base tools"
+          pip install --timeout 60 "click==8.2.1" "typer==0.12.3" "tomli==2.2.1" setuptools bandit safety pip-audit || echo "Failed to install security base tools"
           pip install --timeout 60 trufflehog || echo "Failed to install trufflehog"
           pip install --timeout 60 semgrep || echo "Failed to install semgrep"
           # Download and install gitleaks binary
