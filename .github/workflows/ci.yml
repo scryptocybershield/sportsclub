@@ -163,13 +163,26 @@ jobs:
 
       - name: Install security tools
         run: |
-          python -m venv security-venv
-          echo "$PWD/security-venv/bin" >> $GITHUB_PATH
-          source security-venv/bin/activate
-          pip install --upgrade pip setuptools
-          pip install --timeout 60 "click>=8.2.1,<8.4" "typer==0.12.3" "tomli==2.2.1" "pydantic==2.9.2" bandit safety pip-audit
-          pip install --timeout 60 trufflehog || echo "Failed to install trufflehog"
-          pip install --timeout 60 semgrep || echo "Failed to install semgrep"
+          # Core venv: tools that share compatible pydantic/tomli constraints
+          python -m venv security-core-venv
+          security-core-venv/bin/pip install --upgrade pip setuptools
+          security-core-venv/bin/pip install --timeout 60 \
+            "click>=8.2.1,<8.4" \
+            "typer==0.12.3" \
+            "tomli==2.2.1" \
+            "pydantic==2.9.2" \
+            bandit safety pip-audit
+
+          # TruffleHog in isolated venv (avoids mcp/pydantic conflicts)
+          python -m venv trufflehog-venv
+          trufflehog-venv/bin/pip install --upgrade pip setuptools
+          trufflehog-venv/bin/pip install --timeout 60 trufflehog || echo "Failed to install trufflehog"
+
+          # Semgrep in isolated venv (avoids tomli conflicts)
+          python -m venv semgrep-venv
+          semgrep-venv/bin/pip install --upgrade pip setuptools
+          semgrep-venv/bin/pip install --timeout 60 semgrep || echo "Failed to install semgrep"
+
           # Download and install gitleaks binary
           GITLEAKS_VERSION="8.24.2"
           curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" -o gitleaks.tar.gz
@@ -179,29 +192,29 @@ jobs:
           mkdir -p ~/.local/bin
           mv gitleaks ~/.local/bin/
           echo "$HOME/.local/bin" >> $GITHUB_PATH
-          # Verify installations
-          python -c "import bandit; print('bandit version:', bandit.__version__)" || true
-          python -c "import pkg_resources; print(pkg_resources.get_distribution('safety').version)" || true
-          python -c "import pip_audit; print('pip-audit version:', pip_audit.__version__)" || true
+
+          # Verify core installations
+          security-core-venv/bin/python -c "import bandit; print('bandit version:', bandit.__version__)" || true
+          security-core-venv/bin/python -c "import pkg_resources; print(pkg_resources.get_distribution('safety').version)" || true
+          security-core-venv/bin/python -c "import pip_audit; print('pip-audit version:', pip_audit.__version__)" || true
           gitleaks version || echo "Failed to verify gitleaks"
 
       - name: Bandit scan
         run: |
           cd sportsclub
-          bandit -r . --severity-level high --format json --output ../bandit-report.json
+          ../security-core-venv/bin/bandit -r . --severity-level high --format json --output ../bandit-report.json
 
       - name: Safety dependency scan
         run: |
-          pip install --timeout 60 setuptools "tomli==2.2.1" "pydantic==2.9.2"
-          safety check --json > safety-report.json || echo '{"errors": ["Safety scan failed"]}' > safety-report.json
+          ./security-core-venv/bin/safety check --json > safety-report.json || echo '{"errors": ["Safety scan failed"]}' > safety-report.json
 
       - name: Pip-audit vulnerability scan
         run: |
-          pip-audit --desc on --format json --output pip-audit-report.json
+          ./security-core-venv/bin/pip-audit --desc on --format json --output pip-audit-report.json
 
       - name: TruffleHog secrets scan
         run: |
-          trufflehog filesystem --directory=. --json --output trufflehog-report.json || echo '{"errors": ["TruffleHog scan failed"]}' > trufflehog-report.json
+          ./trufflehog-venv/bin/trufflehog filesystem --directory=. --json --output trufflehog-report.json || echo '{"errors": ["TruffleHog scan failed"]}' > trufflehog-report.json
 
       - name: Gitleaks secrets scan
         run: |
@@ -209,7 +222,7 @@ jobs:
 
       - name: Semgrep static analysis
         run: |
-          semgrep scan --config=auto --json --output semgrep-report.json --no-error || echo '{"errors": ["Semgrep scan failed"]}' > semgrep-report.json
+          ./semgrep-venv/bin/semgrep scan --config=auto --json --output semgrep-report.json --no-error || echo '{"errors": ["Semgrep scan failed"]}' > semgrep-report.json
 
       - name: Bearer data flow security scan
         run: |
